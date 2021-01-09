@@ -55,9 +55,7 @@ for match in re.finditer(search_pattern, search_string):
     data_array.append(data)
 
 print(str(len(data_array)) + " items found")
-
-
-
+data_array = sorted(data_array, key=lambda k: "%s_%s" % (k['output_file'].split("_")[1], k['output_file'].split("_")[0]))
 
 create_file = False
 if os.path.isfile('patterns.xlsx'):
@@ -89,6 +87,7 @@ if create_file:
     df = pd.read_excel('patterns.xlsx')
     data_array = df.to_numpy()
     json_data_array = []
+    string_data = ""
     for data in data_array:
         json_data = {
             'tool': data[0],
@@ -97,6 +96,11 @@ if create_file:
             'regex': data[3],
             'output_file': data[4]
         }
+        string_data = string_data + '["' + data[4] + '", "' + data[3] + '"],\n'
         json_data_array.append(json_data)
+    
     with open("patterns.json", "w") as f:
         json.dump(json_data_array, f, indent=4)
+
+    with open("patterns.txt", "w") as f:
+        f.write(string_data)
