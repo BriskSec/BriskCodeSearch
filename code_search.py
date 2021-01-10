@@ -1,3 +1,11 @@
+# Note: Most of the patterns are derived from the following:
+#  https://github.com/MohitDabas/sastgriper
+#  https://github.com/dustyfresh/PHP-vulnerability-audit-cheatsheet
+#  https://littlemaninmyhead.wordpress.com/2019/08/04/dont-underestimate-grep-based-code-scanning/
+#  https://www.floyd.ch/?p=565
+#  https://github.com/floyd-fuh/crass/blob/master/find-it.sh
+#  https://github.com/wireghoul/graudit/tree/master/signatures
+
 import glob
 import os
 import re
@@ -113,9 +121,10 @@ patterns = [
         ["3_cryptocred_ciphers_rc2", "RC2"],
         ["3_cryptocred_ciphers_rc4", "RC4"],
         ["3_cryptocred_ciphers_crc32", "CRC32"],
-        ["3_cryptocred_ciphers_des", "DES"],
+        ["3_cryptocred_ciphers_des", "DES|TripleDES|.DES"],
         ["3_cryptocred_ciphers_md2", "MD2"],
         ["3_cryptocred_ciphers_md5", "MD5"],
+        ["3_cryptocred_ciphers_xor", "xor"],
         ["3_cryptocred_ciphers_sha1_uppercase", "SHA-?1"],
         ["3_cryptocred_ciphers_sha1_lowercase", "sha-?1"],
         ["3_cryptocred_ciphers_sha256", "SHA-?256"],
@@ -181,10 +190,16 @@ patterns = [
         ["3_dotnet_CharSet_Auto", "CharSet\.Auto"],
         ["3_dotnet_DllImport", "DllImport"],
         ["4_dotnet_ObjectInputStream", "ObjectInputStream"],
+        ["4_dotnet_AllowInsecureDeserialization", "AllowInsecureDeserialization"],
+        ["4_dotnet_System.Net.Cookie", "System\.Net\.Cookie"],
+        ["4_dotnet_crypt", "RNGCryptoServiceProvider|System\.Security\.Cryptography|PBEParameterSpec|PasswordDeriveBytes"],
+        ["4_dotnet_exec", "System\.Diagnostics\.Process|new Cli\s{1,$WILDCARD_SHORT}\(|Shell\s{1,$WILDCARD_SHORT}\("],
+        ["4_dotnet_security_permission", "SecurityPermission|ReflectionPermission|CodeAccessPermission"],
 
         ["1_general_uris_auth_info_narrow", "://[^ ]{1,$WILDCARD_SHORT}:[^ ]{1,$WILDCARD_SHORT}@"],
         ["1_general_con_str_sql_password", ";Password="],
         ["1_general_con_str_sql_pwd", ";Pwd="],
+        ["1_general_aws_keys", "AWS_KEY|AWSKEY|AKIA"],
         ["2_general_html_templating", "<%="],
         ["2_general_superuser", "super.?user"],
         ["2_general_su-binary", "su.{0,3}binary"],
@@ -231,11 +246,12 @@ patterns = [
         ["3_general_webview", "webview"],
         ["3_general_directory_listing", "directory.{0,$WILDCARD_SHORT}listing"],
         ["3_general_backticks", "\`.{2,$WILDCARD_LONG}\`"],
-        ["3_general_sql_select", "SELECT\s.{0,$WILDCARD_LONG}FROM", re.IGNORECASE],
+        ["3_general_sql_select", "SELECT.{0,$WILDCARD_LONG}FROM", re.IGNORECASE],
         ["3_general_sql_insert", "INSERT.{0,$WILDCARD_SHORT}INTO", re.IGNORECASE],
         ["3_general_sql_delete", "DELETE.{0,$WILDCARD_LONG}WHERE", re.IGNORECASE],
         ["3_general_sql_sqlcipher", "sqlcipher"],
         ["3_general_sql_query", "sql_query"],
+        ["3_general_query", "query\s{0,$WILDCARD_SHORT}\("],
         ["3_general_dollar_sql", "\$sql"],
         ["3_general_base64_word", "base64"],
         ["3_general_swear_stupid", "stupid"],
@@ -290,7 +306,9 @@ patterns = [
         ["5_general_gpl5", "General\sPublic\sLicense"],
         ["5_general_debug", "debug"],
         ["5_general_user_agent", "USER_AGENT"],
-        
+        ["5_general_http_vars", "HTTP_.{0,$WILDCARD_SHORT}_VARS"],
+        ["5_general_http_files", "HTTP_.{0,$WILDCARD_SHORT}_FILES"],
+        ["9_general_serialization", "Serialization|SerializationFormatter|Serializable|SerializeObject|SerializationBinder|JsonSerializer|JsonSerializerSettings|DleserializeObject|ISerializable"],
 
         ["2_hmac_with_user_input", "hash_hmac\s{0,$WILDCARD_SHORT}\(.{0,$WILDCARD_LONG}\\\$_"],
 
@@ -435,6 +453,7 @@ patterns = [
         ["3_java_getPeerCertificateChain", "getPeerCertificateChain\("],
         ["3_java_jsp_file_upload", "<s:file\s"],
         ["3_java_spring_mass_assignment", "DataBinder\.setAllowedFields"],
+        ["3_java_xxe_candidates", "SAXParserFactory|DOM4J|XMLInputFactory|TransformerFactory|javax\.xml\.validation\.Validator|SchemaFactory|SAXTransformerFactory|XMLReader|SAXBuilder|SAXReader|Unmarshaller|XPathExpression|DOMSource|StAXSource|DocumentBuilderFactory|XMLInputFactory"],
         ["4_java_crypto_keygenerator-getinstance", "KeyGenerator\.getInstance\("],
         ["4_java_crypto_cipher_getInstance", "Cipher\.getInstance\("],
         ["4_java_crypto_messagedigest", "messagedigest"],
@@ -473,6 +492,7 @@ patterns = [
         ["5_java_setAttribute", "\.setAttribute\("],
         ["5_java_StreamTokenizer", "StreamTokenizer"],
         ["5_java_getResourceAsStream", "getResourceAsStream"],
+        ["5_java_isTrusted", "isTrusted"],
         ["6_java_string_comparison_equals", "equals\("],
         ["6_java_string_comparison_equalsIgnoreCase", "equalsIgnoreCase\("],
         ["6_java_http_getParameter", "\.getParameter.{0,$WILDCARD_SHORT}\("],
@@ -506,7 +526,8 @@ patterns = [
         ["3_js_localStorage", "localStorage"],
         ["3_js_sessionStorage", "sessionStorage"],
         ["3_js_createElement_script", "createElement.{0,$WILDCARD_SHORT}script"],
-        ["3_js_document_domain", "document.domain\s="],
+        ["3_js_document_domain", "document\.domain"],
+        ["3_js_document_cookie", "document\.cookie"],
         ["3_js_postMessage", "postMessage\("],
         ["3_js_addEventListener_message", "addEventListener.{0,$WILDCARD_SHORT}message"],
         ["3_js_AllowScriptAccess", "AllowScriptAccess"],
@@ -522,7 +543,8 @@ patterns = [
         ["4_js_dom_xss_document-URL", "document\.URL"],
         ["4_js_dom_xss_document-write", "document\.writel?n?\(", re.IGNORECASE],
         ["4_js_dom_xss_innerHTML", "\.innerHTML\s{0,$WILDCARD_SHORT}="],
-        ["4_js_react_dom_xss_dangerouslySetInnerHTML", "DangerouslySetInnerHTML\s{0,$WILDCARD_SHORT}="],
+        ["4_js_react_dom_xss_dangerouslySetInnerHTML", "DangerouslySetInnerHTML\s{0,$WILDCARD_SHORT}"],
+        ["4_js_react_dom_xss_trustAsHtml", "trustAsHtml\s{0,$WILDCARD_SHORT}"],
         ["4_js_dom_xss_outerHTML", "\.outerHTML\s{0,$WILDCARD_SHORT}="],
         ["4_js_console", "console\."],
         ["4_js_postMessage", "\.postMessage\("],
@@ -572,9 +594,15 @@ patterns = [
         ["2_php_passthru", "passthru\s{0,$WILDCARD_SHORT}\("],
         ["2_php_shell_exec", "shell_exec\s{0,$WILDCARD_SHORT}\("],
         ["2_php_proc_open", "proc_open\s{0,$WILDCARD_SHORT}\("],
+        ["2_php_proc_close", "proc_close\s{0,$WILDCARD_SHORT}\("],
+        ["2_php_proc_get_status", "proc_get_status\s{0,$WILDCARD_SHORT}\("],
+        ["2_php_proc_nice", "proc_nice\s{0,$WILDCARD_SHORT}\("],
+        ["2_php_proc_terminate", "proc_terminate\s{0,$WILDCARD_SHORT}\("],
         ["2_php_pcntl_exec", "pcntl_exec\s{0,$WILDCARD_SHORT}\("],
         ["2_php_escapeshell", "escapeshell"],
         ["2_php_fopen", "fopen\s{0,$WILDCARD_SHORT}\("],
+        ["2_php_readfile", "readfile\s{0,$WILDCARD_SHORT}\("],
+        ["3_php_unserialize", "unserialize\s{0,$WILDCARD_SHORT}\("],
         ["3_php_phpinfo", "phpinfo"],
         ["3_php_proc", "proc_"],
         ["3_php_file_get_contents", "file_get_contents\s{0,$WILDCARD_SHORT}\("],
@@ -605,8 +633,16 @@ patterns = [
         ["5_php_assert", "assert\s{0,$WILDCARD_SHORT}\("],
         ["5_php_preg_replace", "preg_replace\s{0,$WILDCARD_SHORT}\("],
         ["5_php_create_function", "create_function"],
+        ["5_php_is_dir", "is_dir"],
+        ["5_php_file_exists", "file_exists"],
+        ["5_php_unlink", "unlink"],
+        ["5_php_show_source", "show_source"],
         ["6_php_type_unsafe_comparison", "[^=]==[^=]"],
         ["7_php_file", "file\s{0,$WILDCARD_SHORT}\("],
+        ["7_php_ffi", "FFI::"],
+        ["7_php_oci_parse", "oci_parse"],
+        ["5_php_getenv", "getenv\s{0,$WILDCARD_SHORT}\("],
+        ["5_php_putenv", "putenv\s{0,$WILDCARD_SHORT}\("],
         
         ["2_python_subprocess_shell_true", "shell=True"],
         ["2_python_shutil_copyfile", "copyfile\s{0,$WILDCARD_SHORT}\("],
@@ -632,6 +668,7 @@ patterns = [
         ["4_python_is_object_identity_operator_left", "\d\s{1,$WILDCARD_SHORT}is\s{1,$WILDCARD_SHORT}"],
         ["4_python_is_object_identity_operator_right", "\s{1,$WILDCARD_SHORT}is\s{1,$WILDCARD_SHORT}\d"],
         ["4_python_is_object_identity_operator_general", "\sis\s"],
+        ["4_python_disable_warning", "urllib3\.disable_warnings"],
 
         ["2_ruby_http_basic_authenticate_with", "http_basic_authenticate_with"],
         ["2_ruby_yaml", ":YAML"],
@@ -657,6 +694,7 @@ for pattern in patterns:
     value.replace("$WILDCARD_SHORT", str(WILDCARD_SHORT))
     value.replace("$WILDCARD_LONG", str(WILDCARD_LONG))
     
+    print(value)
     compiled = None
     if len(pattern) > 2: 
         params = pattern[2]
@@ -692,7 +730,7 @@ for foundFile in files:
             for pattern in processes_patterns:
                 for match in re.finditer(pattern[1], line):
                     print('Found pattern %s on line %s of %s: %s' % (pattern[1].pattern, i+1, foundFile, match.group()))
-                    data[pattern[1].pattern].append([foundFile, i+1, match.group(), line])
+                    data[pattern[1].pattern].append([foundFile, i+1, line.replace("\n","").replace("\r", "")])
     except UnicodeDecodeError as e:
         print("Skipping binary file: " + foundFile)
 
@@ -700,6 +738,7 @@ for pattern in processes_patterns:
     if len(data[pattern[1].pattern]) > 0:
         with open(output_dir + "/" + pattern[0] + '.csv', 'w', newline='') as f:
             writer = csv.writer(f)
+            print(data[pattern[1].pattern])
             writer.writerows(data[pattern[1].pattern])
 
 
@@ -719,10 +758,3 @@ for pattern in processes_patterns:
  
 # to skip binary files use I (uppercase i)
 # grep -iIHrn 'meng' current/
-
-# https://github.com/MohitDabas/sastgriper
-# https://github.com/dustyfresh/PHP-vulnerability-audit-cheatsheet
-# https://littlemaninmyhead.wordpress.com/2019/08/04/dont-underestimate-grep-based-code-scanning/
-# https://www.floyd.ch/?p=565
-# https://github.com/floyd-fuh/crass/blob/master/find-it.sh
-# https://github.com/wireghoul/graudit/tree/master/signatures
