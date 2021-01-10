@@ -694,7 +694,7 @@ for pattern in patterns:
     value.replace("$WILDCARD_SHORT", str(WILDCARD_SHORT))
     value.replace("$WILDCARD_LONG", str(WILDCARD_LONG))
     
-    print(value)
+    # print(value)
     compiled = None
     if len(pattern) > 2: 
         params = pattern[2]
@@ -712,10 +712,10 @@ result = []
 
 subfolders, files = run_fast_scandir(scan_dir, names=interesting_files)
 if len(files) > 0:
-    with open('_interesting_files.csv', 'w', newline='') as f:
-        writer = csv.writer(f)
-        for file in files:
-            writer.writerows(file)
+    with open(output_dir + "/_interesting_files.csv", 'w', newline='\r\n') as f:
+        f.write('\n'.join(files) + '\n')
+            
+
 
 subfolders, files = run_fast_scandir(scan_dir, ext=source_files_extensions)
 
@@ -723,23 +723,23 @@ data = {}
 for pattern in processes_patterns:
     data[pattern[1].pattern] = []
 
+totalFiles = len(files)
+currentCount = 1
 for foundFile in files:
     try:
         prevLine = ""
         for i, line in enumerate(open(foundFile)):
             for pattern in processes_patterns:
                 for match in re.finditer(pattern[1], line):
-                    print('Found pattern %s on line %s of %s: %s' % (pattern[1].pattern, i+1, foundFile, match.group()))
-                    data[pattern[1].pattern].append([foundFile, i+1, line.replace("\n","").replace("\r", "")])
+                    # print('Found pattern %s on line %s of %s: %s' % (pattern[1].pattern, i+1, foundFile, match.group()))
+                    with open(output_dir + "/" + pattern[0] + '.csv', 'w', newline='') as f:
+                        findRecord = [[foundFile, i+1, line.replace("\n","").replace("\r", "")]]
+                        writer = csv.writer(f)
+                        writer.writerows(findRecord)
+        print("%d/%d done (%d%%). Completed file: %s" % (currentCount, totalFiles, (currentCount / totalFiles) *  100, foundFile))
     except UnicodeDecodeError as e:
         print("Skipping binary file: " + foundFile)
-
-for pattern in processes_patterns:
-    if len(data[pattern[1].pattern]) > 0:
-        with open(output_dir + "/" + pattern[0] + '.csv', 'w', newline='') as f:
-            writer = csv.writer(f)
-            print(data[pattern[1].pattern])
-            writer.writerows(data[pattern[1].pattern])
+    currentCount = currentCount + 1
 
 
 # find meng in all files under a specific directory 
