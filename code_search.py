@@ -5,7 +5,8 @@
 #  https://www.floyd.ch/?p=565
 #  https://github.com/floyd-fuh/crass/blob/master/find-it.sh
 #  https://github.com/wireghoul/graudit/tree/master/signatures
-
+# git clone https://github.com/nviennot/jd-core-java.git
+# grep -iRn "Example" --color .
 import glob
 import os
 import re
@@ -17,12 +18,11 @@ from data_patterns import patterns
 scan_dir = './input'
 output_dir = "./reports"
 
+extract_files = ['.war', '.ear', '.zip', '.tar', '.gz']
+jd_decompile_files = ['.jar']
+
 WILDCARD_SHORT = 20
 WILDCARD_LONG = 200
-
-def wildcard_wrap(value):
-    return re.compile(value)
-    # return ".*" + value + ".*"
 
 processes_patterns = []
 for pattern in patterns:
@@ -48,13 +48,36 @@ result = []
 #        result.append(y)
 # print(result)
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+subfolders, files = run_fast_scandir(scan_dir, ext=extract_files)
+for foundFile in files:
+    extract = input('Found ' + foundFile + '. Extract? Y = yes, N = no\n')
+    if extract.lower() == 'y':
+        splits = foundFile.rsplit('/', 1)
+        if foundFile.endswith('tar'):
+            os.system("cd " + splits[0] + "; tar -xf -C " + splits[1] + "_extracted " + splits[1])
+        elif foundFile.endswith('tar.gz'):
+            os.system("cd " + splits[0] + "; tar -xzf -C " + splits[1] + "_extracted " + splits[1])
+        elif foundFile.endswith('gz'):
+            os.system("cd " + splits[0] + "; tar -xzf -C " + splits[1] + "_extracted " + splits[1])
+        else:
+            os.system("cd " + splits[0] + "; unzip -n -d " + splits[1] + "_extracted " + splits[1])
+
+subfolders, files = run_fast_scandir(scan_dir, names=jd_decompile_files)
+for foundFile in files:
+    decompile = input('Found ' + foundFile + '. Decompile? Y = yes, N = no\n')
+    if decompile.lower() == 'y':
+        if foundFile.endswith('jar'):
+            splits = foundFile.rsplit('/', 1)
+            os.system("cd " + splits[0] + "; java -jar " + dir_path + "/tools/jd-core-java-1.2.jar " + splits[1] + " " + splits[1] + "_decompiled")
+
 subfolders, files = run_fast_scandir(scan_dir, names=interesting_files)
 if len(files) > 0:
     with open(output_dir + "/_interesting_files.csv", 'w', newline='\r\n') as f:
         f.write('\n'.join(files) + '\n')
 
-
-subfolders, files = run_fast_scandir(scan_dir, ext=source_files_extensions)
+subfolders, files = run_fast_scandir(scan_dir)
 
 data = {}
 for pattern in processes_patterns:
@@ -69,7 +92,7 @@ for foundFile in files:
             for pattern in processes_patterns:
                 for match in re.finditer(pattern[1], line):
                     # print('Found pattern %s on line %s of %s: %s' % (pattern[1].pattern, i+1, foundFile, match.group()))
-                    with open(output_dir + "/" + pattern[0] + '.csv', 'w', newline='') as f:
+                    with open(output_dir + "/" + pattern[0] + '.csv', 'a', newline='') as f:
                         findRecord = [
                             [foundFile, i+1, line.replace("\n", "").replace("\r", "")]]
                         writer = csv.writer(f)
