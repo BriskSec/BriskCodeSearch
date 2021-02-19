@@ -279,6 +279,7 @@ patterns = [
         ["5_general_REMOTE_ADDR", "REMOTE_ADDR", re.IGNORECASE],
         ["5_general_user_agent", "USER_AGENT", re.IGNORECASE],
         ["5_general_user-agent", "User-Agent", re.IGNORECASE],
+        ["5_general_websocket", "ws:|wss:|WebSocket", re.IGNORECASE],
         ["9_general_serialization", "Serialization|SerializationFormatter|Serializable|SerializeObject|SerializationBinder|JsonSerializer|JsonSerializerSettings|DleserializeObject|ISerializable"],
 
         ["2_hmac_with_user_input", "hash_hmac\s{0,$WILDCARD_SHORT}\(.{0,$WILDCARD_LONG}\\\$_"],
