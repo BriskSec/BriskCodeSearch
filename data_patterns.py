@@ -177,7 +177,7 @@ patterns = [
         ["2_general_con_str_sqlserver", "Server=.{0,$WILDCARD_SHORT};Database=", re.IGNORECASE],
         ["2_general_con_str_localdb", ";Integrated.Security=", re.IGNORECASE],
         ["2_general_sql_injection", "sql.{0,$WILDCARD_SHORT}injection", re.IGNORECASE],
-        ["2_general_xss_uppercase", "XSS", re.IGNORECASE],],
+        ["2_general_xss_uppercase", "XSS", re.IGNORECASE],
         ["2_general_hacking_techniques_clickjacking", "click.{0,$WILDCARD_SHORT}jacking", re.IGNORECASE],
         ["2_general_hacking_techniques_xsrf", "xsrf", re.IGNORECASE],
         ["2_general_hacking_techniques_csrf", "csrf", re.IGNORECASE],
